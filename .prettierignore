@@ -1,0 +1,12 @@
+# 자동 생성 디렉토리
+.nuxt/
+.output/
+node_modules/
+dist/
+
+# 설정 / Claude
+.claude/
+*.lock
+
+# 문서
+*.md

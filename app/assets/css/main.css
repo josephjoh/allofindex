@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+/* Tailwind v4: .dark 클래스 기반 다크모드 (기본값은 prefers-color-scheme 미디어 쿼리) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+  Tailwind v4 디자인 토큰 정의
+  tailwind.config.ts 없음 — @theme 디렉티브로 커스터마이징
+*/
+@theme {
+  /* Primary 색상 팔레트 */
+  --color-primary-50: oklch(97% 0.02 250);
+  --color-primary-100: oklch(93% 0.05 250);
+  --color-primary-200: oklch(86% 0.09 250);
+  --color-primary-300: oklch(77% 0.13 250);
+  --color-primary-400: oklch(66% 0.17 250);
+  --color-primary-500: oklch(55% 0.2 250);
+  --color-primary-600: oklch(47% 0.19 250);
+  --color-primary-700: oklch(39% 0.17 250);
+  --color-primary-800: oklch(31% 0.13 250);
+  --color-primary-900: oklch(23% 0.09 250);
+  --color-primary-950: oklch(16% 0.06 250);
+
+  /* Fear & Greed 시맨틱 색상 */
+  --color-fear-extreme: oklch(55% 0.22 29); /* 빨강 - 극단적 공포 */
+  --color-fear: oklch(65% 0.18 40); /* 주황-빨강 - 공포 */
+  --color-neutral: oklch(75% 0.16 85); /* 노랑 - 중립 */
+  --color-greed: oklch(62% 0.18 145); /* 초록 - 탐욕 */
+  --color-greed-extreme: oklch(50% 0.2 145); /* 짙은 초록 - 극단적 탐욕 */
+
+  /* 폰트 */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* 커스텀 반경 / 그림자 */
+  --radius-card: 0.75rem;
+  --shadow-card: 0 4px 24px oklch(0% 0 0 / 8%);
+}
+
+/* 기본 레이어 리셋 */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply font-sans antialiased bg-white text-gray-900;
+  }
+
+  /* 다크 모드 — CSS 클래스 기반 (.dark 클래스 토글) */
+  .dark body {
+    @apply bg-gray-950 text-gray-50;
+  }
+
+  /* 접근성: 포커스 링 */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary-500;
+  }
+}
+
+/* 공통 컴포넌트 레이어 */
+@layer components {
+  .card {
+    @apply rounded-card shadow-card bg-white dark:bg-gray-800 p-6;
+  }
+
+  .btn-base {
+    @apply inline-flex items-center justify-center gap-2 font-medium rounded-lg;
+    @apply transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+}
