@@ -147,28 +147,30 @@ ALTER TABLE users
 ```
 server/
 ├── api/auth/
-│   ├── google.get.ts              # GET /api/auth/google — 리다이렉트
+│   ├── google.get.ts              # ✅ GET /api/auth/google — 리다이렉트
 │   ├── google/
-│   │   └── callback.get.ts        # GET /api/auth/google/callback
-│   ├── kakao.get.ts               # GET /api/auth/kakao — 리다이렉트
+│   │   └── callback.get.ts        # ✅ GET /api/auth/google/callback (mock 토큰)
+│   ├── kakao.get.ts               # ✅ GET /api/auth/kakao — 리다이렉트
 │   └── kakao/
-│       └── callback.get.ts        # GET /api/auth/kakao/callback
+│       └── callback.get.ts        # ✅ GET /api/auth/kakao/callback (mock 토큰)
 └── utils/
-    └── oauth.ts                   # state 생성/검증 공통 유틸
+    └── oauth.ts                   # ✅ state 생성/검증 공통 유틸
 ```
 
-### 환경변수 추가 (`.env` / `.env.example`)
+### 환경변수 추가 (`.env` / `.env.example`) — ✅ 완료
+
+> ⚠️ Nuxt runtimeConfig 자동 매핑은 `NUXT_` 접두사 필수
 
 ```env
 # Google OAuth
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
+NUXT_GOOGLE_CLIENT_ID=
+NUXT_GOOGLE_CLIENT_SECRET=
+NUXT_GOOGLE_REDIRECT_URI=http://localhost:3000/api/auth/google/callback
 
 # Kakao OAuth
-KAKAO_CLIENT_ID=
-KAKAO_CLIENT_SECRET=
-KAKAO_REDIRECT_URI=http://localhost:3000/api/auth/kakao/callback
+NUXT_KAKAO_CLIENT_ID=
+NUXT_KAKAO_CLIENT_SECRET=
+NUXT_KAKAO_REDIRECT_URI=http://localhost:3000/api/auth/kakao/callback
 
 # Spring Boot API
 NUXT_SPRING_API_BASE=http://localhost:8080
@@ -253,52 +255,57 @@ Google 이미지는 만료될 수 있고, Kakao 이미지는 사용자가 변경
 
 ## 구현 단계 (Phase)
 
-```
-Phase 1 — Spring Boot 준비
-├── users 테이블 스키마 변경 (ALTER TABLE)
-├── POST /api/users/social-login 구현
-├── JWT 발급/검증 구현 (Spring Security + JJWT)
-└── GET /api/users/me 구현
+### Phase 1 — Spring Boot 준비 🔲 Backend 작업 필요
 
-Phase 2 — Nuxt Google 로그인
-├── server/utils/oauth.ts (state 유틸)
-├── server/api/auth/google.get.ts
-├── server/api/auth/google/callback.get.ts
-└── 로그인 페이지 Google 버튼 추가
+- [ ] `users` 테이블 스키마 변경 (ALTER TABLE — [DB 스키마 변경](#db-스키마-변경) 섹션 참조)
+- [ ] `POST /api/users/social-login` 구현 (provider + profile → 유저 upsert + JWT 발급)
+- [ ] JWT 발급/검증 구현 (Spring Security + JJWT)
+- [ ] `GET /api/users/me` 구현 (JWT 검증 → 유저 정보 반환)
 
-Phase 3 — Nuxt Kakao 로그인
-├── server/api/auth/kakao.get.ts
-├── server/api/auth/kakao/callback.get.ts
-├── Kakao 이메일 미동의 케이스 처리
-└── 로그인 페이지 Kakao 버튼 추가
+### Phase 2 — Nuxt Google 로그인 ✅ 완료
 
-Phase 4 — 기존 mock 교체
-├── auth-store.ts → Spring Boot API 호출로 전환
-├── me.get.ts → Spring Boot 프록시로 교체
-└── logout.post.ts → 쿠키 삭제 + Spring Boot 호출
+- [x] `server/utils/oauth.ts` — state 생성/검증 유틸 (인메모리 Map, 1회용)
+- [x] `server/api/auth/google.get.ts` — Google OAuth 리다이렉트
+- [x] `server/api/auth/google/callback.get.ts` — 콜백 처리 (현재 mock 토큰)
+- [x] 로그인 페이지 Google 버튼 추가
 
-Phase 5 — 추가 기능 (선택)
-├── refresh_token 갱신 흐름
-├── 계정 연동/해제 UI (마이페이지)
-└── 프로필 이미지 자체 스토리지 이전
-```
+### Phase 3 — Nuxt Kakao 로그인 ✅ 완료
+
+- [x] `server/api/auth/kakao.get.ts` — Kakao OAuth 리다이렉트
+- [x] `server/api/auth/kakao/callback.get.ts` — 콜백 처리 (현재 mock 토큰)
+- [x] Kakao 이메일 미동의 케이스 처리 (`kakao_{id}@kakao.local` 가상 이메일)
+- [x] 로그인 페이지 Kakao 버튼 추가
+
+### Phase 4 — 기존 mock 교체 🔲 Phase 1 완료 후 작업
+
+- [ ] `google/callback.get.ts` → `POST ${springApiBase}/api/users/social-login` 실제 호출로 교체
+- [ ] `kakao/callback.get.ts` → `POST ${springApiBase}/api/users/social-login` 실제 호출로 교체
+- [ ] `me.get.ts` → Spring Boot `/api/users/me` 프록시로 교체
+- [ ] `logout.post.ts` → 쿠키 삭제 + Spring Boot 호출
+
+### Phase 5 — 추가 기능 (선택) 🔲 추후 검토
+
+- [ ] refresh_token 갱신 흐름
+- [ ] 계정 연동/해제 UI (마이페이지)
+- [ ] 프로필 이미지 자체 스토리지 이전 (S3 등)
 
 ---
 
 ## 외부 서비스 등록
 
-### Google Cloud Console
-1. [console.cloud.google.com](https://console.cloud.google.com) → 프로젝트 생성
-2. API 및 서비스 → OAuth 동의 화면 설정
-3. 사용자 인증 정보 → OAuth 2.0 클라이언트 ID 생성
-4. 승인된 리디렉션 URI 등록:
-   - 개발: `http://localhost:3000/api/auth/google/callback`
-   - 운영: `https://{도메인}/api/auth/google/callback`
+### Google Cloud Console ✅ 완료
 
-### Kakao Developers
-1. [developers.kakao.com](https://developers.kakao.com) → 애플리케이션 추가
-2. 플랫폼 → Web 사이트 도메인 등록
-3. 카카오 로그인 → 활성화 → Redirect URI 등록:
-   - 개발: `http://localhost:3000/api/auth/kakao/callback`
-   - 운영: `https://{도메인}/api/auth/kakao/callback`
-4. 동의항목 → 이메일(선택), 프로필 닉네임(필수), 프로필 사진(선택) 설정
+- [x] 프로젝트 생성
+- [x] OAuth 동의 화면 설정
+- [x] OAuth 2.0 클라이언트 ID 생성 + 시크릿 발급
+- [x] 승인된 리디렉션 URI 등록: `http://localhost:3000/api/auth/google/callback`
+- [ ] 운영 URI 추가: `https://{도메인}/api/auth/google/callback` (배포 시)
+
+### Kakao Developers ✅ 완료
+
+- [x] 애플리케이션 추가
+- [x] Web 사이트 도메인 등록
+- [x] 카카오 로그인 활성화
+- [x] Redirect URI 등록: `http://localhost:3000/api/auth/kakao/callback`
+- [x] 동의항목 설정 (이메일 선택, 프로필 닉네임 필수, 프로필 사진 선택)
+- [ ] 운영 URI 추가: `https://{도메인}/api/auth/kakao/callback` (배포 시)
