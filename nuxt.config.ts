@@ -58,6 +58,19 @@ export default defineNuxtConfig({
     apiSecret: "",
     apiBaseUrl: "https://api.alternative.me/fng/",
 
+    // Google OAuth (서버 전용)
+    googleClientId: "",
+    googleClientSecret: "",
+    googleRedirectUri: "http://localhost:3000/api/auth/google/callback",
+
+    // Kakao OAuth (서버 전용)
+    kakaoClientId: "",
+    kakaoClientSecret: "",
+    kakaoRedirectUri: "http://localhost:3000/api/auth/kakao/callback",
+
+    // Spring Boot API (서버 전용)
+    springApiBase: "http://localhost:8080",
+
     public: {
       // 클라이언트 노출 가능 — NUXT_PUBLIC_* 환경 변수로 오버라이드
       apiBase: "/api",
