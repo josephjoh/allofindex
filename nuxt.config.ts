@@ -69,7 +69,7 @@ export default defineNuxtConfig({
     kakaoRedirectUri: "http://localhost:3000/api/auth/kakao/callback",
 
     // Spring Boot API (서버 전용)
-    springApiBase: "http://localhost:8080",
+    springApiBase: "http://localhost:8081",
 
     public: {
       // 클라이언트 노출 가능 — NUXT_PUBLIC_* 환경 변수로 오버라이드

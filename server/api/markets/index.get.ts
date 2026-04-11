@@ -1,9 +1,5 @@
-import {
-  buildMarketSummary,
-  VALID_MARKET_IDS,
-} from "../../utils/market-config";
-
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
+  const config = useRuntimeConfig();
   const query = getQuery(event);
   const historyLimit = Number(query["historyLimit"] ?? 30);
 
@@ -14,18 +10,15 @@ export default defineEventHandler((event) => {
     });
   }
 
-  // TODO: DB 연동 후 아래 mock을 교체
-  // SELECT m.*, mh.score, mh.grade, mh.trade_date
-  // FROM market m
-  // LEFT JOIN market_history mh ON mh.market_id = m.id
-  // WHERE mh.trade_date >= CURRENT_DATE - INTERVAL historyLimit DAY
-  // ORDER BY mh.trade_date DESC
-  const data = VALID_MARKET_IDS.map((id) =>
-    buildMarketSummary(id, historyLimit),
-  );
-
-  return {
-    data,
-    metadata: { historyLimit },
-  };
+  try {
+    return await $fetch(`${config.springApiBase}/api/markets`, {
+      query: { historyLimit },
+    });
+  } catch {
+    throw createError({
+      statusCode: 502,
+      statusMessage: "마켓 데이터를 불러올 수 없습니다.",
+      data: { code: "UPSTREAM_ERROR" },
+    });
+  }
 });

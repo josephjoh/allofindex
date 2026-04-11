@@ -2,7 +2,7 @@ export interface NewsItem {
   id: number;
   title: string;
   source: string;
-  time: string;
+  publishedAt: string; // ISO 8601
   market: "sp500" | "kospi" | "kosdaq" | "global";
   url: string;
 }

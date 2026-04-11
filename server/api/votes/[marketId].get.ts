@@ -1,21 +1,23 @@
-import { getVoteSummary } from "../../utils/votes-store";
-import { isValidMarketId } from "../../utils/market-config";
+const VALID_MARKET_IDS = ["sp500", "kospi", "kosdaq"];
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
+  const config = useRuntimeConfig();
   const marketId = getRouterParam(event, "marketId") ?? "";
 
-  if (!isValidMarketId(marketId)) {
+  if (!VALID_MARKET_IDS.includes(marketId)) {
     throw createError({
       statusCode: 404,
       statusMessage: `알 수 없는 마켓 ID: ${marketId}`,
     });
   }
 
-  // TODO: DB 연동 후 아래 mock을 교체
-  // SELECT bearish, bullish, total FROM votes_daily_summary
-  // WHERE market_id = (SELECT id FROM market WHERE market_code = ?)
-  //   AND vote_date = CURRENT_DATE
-  const data = getVoteSummary(marketId);
-
-  return { data };
+  try {
+    return await $fetch(`${config.springApiBase}/api/votes/${marketId}`);
+  } catch {
+    throw createError({
+      statusCode: 502,
+      statusMessage: "투표 데이터를 불러올 수 없습니다.",
+      data: { code: "UPSTREAM_ERROR" },
+    });
+  }
 });

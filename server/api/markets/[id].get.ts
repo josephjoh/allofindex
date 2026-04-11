@@ -1,14 +1,12 @@
-import {
-  buildMarketDetail,
-  isValidMarketId,
-} from "../../utils/market-config";
+const VALID_MARKET_IDS = ["sp500", "kospi", "kosdaq"];
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
+  const config = useRuntimeConfig();
   const id = getRouterParam(event, "id") ?? "";
   const query = getQuery(event);
   const limit = Number(query["limit"] ?? 30);
 
-  if (!isValidMarketId(id)) {
+  if (!VALID_MARKET_IDS.includes(id)) {
     throw createError({
       statusCode: 404,
       statusMessage: `알 수 없는 마켓 ID: ${id}`,
@@ -22,16 +20,15 @@ export default defineEventHandler((event) => {
     });
   }
 
-  // TODO: DB 연동 후 아래 mock을 교체
-  // 1. SELECT * FROM market WHERE market_code = id
-  // 2. SELECT * FROM market_indicators WHERE market_id = ? ORDER BY sort_order
-  // 3. SELECT score, grade, trade_date FROM market_history
-  //    WHERE market_id = ? AND trade_date >= CURRENT_DATE - INTERVAL limit DAY
-  //    ORDER BY trade_date DESC
-  const data = buildMarketDetail(id, limit);
-
-  return {
-    data,
-    metadata: { market: id, limit, count: data.history.length },
-  };
+  try {
+    return await $fetch(`${config.springApiBase}/api/markets/${id}`, {
+      query: { limit },
+    });
+  } catch {
+    throw createError({
+      statusCode: 502,
+      statusMessage: "마켓 상세 데이터를 불러올 수 없습니다.",
+      data: { code: "UPSTREAM_ERROR" },
+    });
+  }
 });

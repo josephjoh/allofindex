@@ -16,41 +16,22 @@ interface Market {
   region: string;
 }
 
-const markets: Market[] = [
-  {
-    id: "sp500",
-    name: "S&P 500",
-    nameKo: "미국 주식",
-    value: 72,
-    classification: "Greed",
-    sparkline: [45, 52, 58, 54, 60, 63, 67, 65, 70, 72],
-    description:
-      "S&P 500 기반 7개 지표의 동일 가중치 평균. NYSE 시황, VIX, 풋/콜 비율 등을 반영합니다.",
-    region: "미국",
-  },
-  {
-    id: "kospi",
-    name: "KOSPI",
-    nameKo: "한국 주식 (코스피)",
-    value: 48,
-    classification: "Neutral",
-    sparkline: [38, 42, 40, 44, 46, 43, 47, 45, 49, 48],
-    description:
-      "VKOSPI, KOSPI 모멘텀, 주가 강도 등 6개 지표를 가중 평균해 산출합니다.",
-    region: "한국",
-  },
-  {
-    id: "kosdaq",
-    name: "KOSDAQ",
-    nameKo: "한국 주식 (코스닥)",
-    value: 35,
-    classification: "Fear",
-    sparkline: [55, 50, 46, 48, 42, 40, 38, 37, 36, 35],
-    description:
-      "KOSDAQ 전용 변동성·모멘텀·강도 지표를 바탕으로 코스닥 심리를 수치화합니다.",
-    region: "한국",
-  },
-];
+const { data: marketsRes } = await useFetch("/api/markets");
+
+const markets = computed<Market[]>(() => {
+  const res = marketsRes.value as any;
+  if (!res?.data) return [];
+  return res.data.map((m: any): Market => ({
+    id: m.id,
+    name: m.name,
+    nameKo: m.nameKo,
+    value: m.value,
+    classification: m.value_classification,
+    sparkline: m.sparkline ?? [],
+    description: m.description,
+    region: m.region,
+  }));
+});
 
 const scoreZones = [
   { range: "0–20", label: "Extreme Fear", color: "#dc2626" },

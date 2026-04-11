@@ -5,144 +5,14 @@ definePageMeta({ layout: "default" });
 
 useHead({ title: "뉴스 — All of Index" });
 
-const allNews: NewsItem[] = [
-  {
-    id: 1,
-    title: '연준, 기준금리 동결 결정…"추가 데이터 확인 후 인하 검토"',
-    source: "Bloomberg",
-    time: "2시간 전",
-    market: "sp500",
-    url: "#",
-  },
-  {
-    id: 2,
-    title: "코스피, 외국인 순매수 5거래일 연속…2,680선 돌파",
-    source: "한국경제",
-    time: "3시간 전",
-    market: "kospi",
-    url: "#",
-  },
-  {
-    id: 3,
-    title: "나스닥 기술주 강세…빅테크 1분기 실적 기대감 상승",
-    source: "Reuters",
-    time: "4시간 전",
-    market: "sp500",
-    url: "#",
-  },
-  {
-    id: 4,
-    title: "코스닥 바이오 섹터, 임상 3상 발표 앞두고 동반 강세",
-    source: "매일경제",
-    time: "5시간 전",
-    market: "kosdaq",
-    url: "#",
-  },
-  {
-    id: 5,
-    title: "달러 인덱스 3주 만에 최저…신흥국 통화 강세 전환",
-    source: "WSJ",
-    time: "6시간 전",
-    market: "global",
-    url: "#",
-  },
-  {
-    id: 6,
-    title: "삼성전자, 반도체 신규 라인 투자 확대…코스피 상승 견인",
-    source: "한국경제",
-    time: "7시간 전",
-    market: "kospi",
-    url: "#",
-  },
-  {
-    id: 7,
-    title: "S&P 500, 사상 최고치 1% 이내 근접…투자 심리 빠르게 회복",
-    source: "CNBC",
-    time: "8시간 전",
-    market: "sp500",
-    url: "#",
-  },
-  {
-    id: 8,
-    title: "코스닥 150 지수 정기 변경…편입 종목 12개 교체",
-    source: "연합뉴스",
-    time: "10시간 전",
-    market: "kosdaq",
-    url: "#",
-  },
-  {
-    id: 9,
-    title: 'Fed 파월 의장 "인플레이션 목표 2% 복귀에 인내심 필요"',
-    source: "Reuters",
-    time: "12시간 전",
-    market: "sp500",
-    url: "#",
-  },
-  {
-    id: 10,
-    title: "코스피 외국인 1조 순매수…환율 1,340원대 안착",
-    source: "연합인포맥스",
-    time: "13시간 전",
-    market: "kospi",
-    url: "#",
-  },
-  {
-    id: 11,
-    title: "미국 CPI 예상치 하회…S&P 500 선물 1.2% 급등",
-    source: "Bloomberg",
-    time: "14시간 전",
-    market: "sp500",
-    url: "#",
-  },
-  {
-    id: 12,
-    title: "코스닥 바이오 강세 지속…셀트리온 52주 신고가",
-    source: "머니투데이",
-    time: "15시간 전",
-    market: "kosdaq",
-    url: "#",
-  },
-  {
-    id: 13,
-    title: "국제유가, OPEC+ 감산 연장 합의 기대에 2% 상승",
-    source: "WSJ",
-    time: "16시간 전",
-    market: "global",
-    url: "#",
-  },
-  {
-    id: 14,
-    title: "중국 경기 부양책 발표…MSCI 신흥시장 지수 반등",
-    source: "Financial Times",
-    time: "18시간 전",
-    market: "global",
-    url: "#",
-  },
-  {
-    id: 15,
-    title: "한국 수출 5개월 연속 증가…반도체 호조 견인",
-    source: "산업통상자원부",
-    time: "1일 전",
-    market: "kospi",
-    url: "#",
-  },
-  {
-    id: 16,
-    title: "애플, 아이폰 AI 기능 강화 발표…나스닥 2% 상승",
-    source: "CNBC",
-    time: "1일 전",
-    market: "sp500",
-    url: "#",
-  },
-];
+const { data: newsRes } = await useFetch("/api/news", {
+  query: { limit: 100 },
+});
 
-// 검색용 lowercase 인덱스 — 데이터가 정적이므로 한 번만 계산
-const searchIndex = new Map(
-  allNews.map((n) => [
-    n.id,
-    { t: n.title.toLowerCase(), s: n.source.toLowerCase() },
-  ]),
-);
+const allNews = computed<NewsItem[]>(() => {
+  const res = newsRes.value as any;
+  return res?.data ?? [];
+});
 
 const searchQuery = ref("");
 const activeFilter = ref("all");
@@ -171,16 +41,17 @@ const marketBadge: Record<string, string> = {
 };
 
 const filtered = computed(() => {
-  let result = allNews;
+  let result = allNews.value;
   if (activeFilter.value !== "all") {
     result = result.filter((n) => n.market === activeFilter.value);
   }
   const q = searchQuery.value.trim().toLowerCase();
   if (q) {
-    result = result.filter((n) => {
-      const idx = searchIndex.get(n.id)!;
-      return idx.t.includes(q) || idx.s.includes(q);
-    });
+    result = result.filter(
+      (n) =>
+        n.title.toLowerCase().includes(q) ||
+        n.source.toLowerCase().includes(q),
+    );
   }
   return result;
 });
@@ -324,7 +195,7 @@ function clearSearch() {
               >
               <span class="text-gray-200 dark:text-gray-700">·</span>
               <span class="text-xs text-gray-400 dark:text-gray-500">{{
-                item.time
+                formatRelativeTime(item.publishedAt)
               }}</span>
             </div>
           </a>

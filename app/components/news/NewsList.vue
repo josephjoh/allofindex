@@ -108,7 +108,7 @@ const marketBadge: Record<string, string> = {
             }}</span>
             <span class="text-xs text-gray-200 dark:text-gray-700">·</span>
             <span class="text-xs text-gray-400 dark:text-gray-500">{{
-              item.time
+              formatRelativeTime(item.publishedAt)
             }}</span>
           </div>
         </a>
